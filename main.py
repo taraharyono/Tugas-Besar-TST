@@ -32,3 +32,26 @@ async def get_perfume_notes(perfume_name: str):
     if not perfume_notes:
         raise HTTPException(status_code=404, detail="Perfume not found")
     return {"perfume_name": perfume_name, "perfume_notes": perfume_notes}
+
+# Endpoint to delete perfume based on perfume names
+@app.delete("/delete_perfume/{perfume_name}")
+async def delete_perfume(perfume_name: str):
+    global perfumes_data
+
+    index_to_remove = None
+
+    # Loop through each entry to find the matching perfume
+    for index, perfume in enumerate(perfumes_data):
+        if perfume["Name"].lower() == perfume_name.lower():
+            index_to_remove = index
+            break  # Stop the loop when the match is found
+
+    if index_to_remove is not None:
+        deleted_perfume = perfumes_data.pop(index_to_remove)
+
+        with open('perfume.json', 'w') as file:
+            json.dump({"perfume": perfumes_data}, file, indent=4)
+
+        return {"message": f"Perfume '{deleted_perfume['Name']}' deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Perfume not found")
