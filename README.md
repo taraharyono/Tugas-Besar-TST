@@ -12,7 +12,7 @@ Algoritma akan mengembalikan daftar parfum yang memiliki kombinasi semua notes y
 - uvicorn 0.24.0
 
 # Cara Menjalankan Program
-1. Akses **[20.24.171.219/docs](20.24.171.219/docs)**
+1. Akses `20.24.171.219/docs`
 2. Menggunakan API endpoint yang ada di situs tersebut menekan opsi “try it out” pada setiap endpoint
 
 # Algoritma Core Service
