@@ -55,3 +55,46 @@ async def delete_perfume(perfume_name: str):
         return {"message": f"Perfume '{deleted_perfume['Name']}' deleted successfully"}
     else:
         raise HTTPException(status_code=404, detail="Perfume not found")
+
+
+# New endpoint to update perfume notes for a specific perfume name
+@app.put("/update_perfume_notes/{perfume_name}")
+async def update_perfume_notes(perfume_name: str, updated_note: str):
+    global perfumes_data
+
+    updated_note = updated_note.strip()  # Remove leading/trailing whitespaces
+
+    # Loop through each entry to find the matching perfume
+    for perfume in perfumes_data:
+        if perfume["Name"].lower() == perfume_name.lower():
+            current_notes = perfume["Notes"]
+            updated_notes = f"{current_notes}, {updated_note}" if current_notes else updated_note
+
+            perfume["Notes"] = updated_notes
+
+            with open('perfume.json', 'w') as file:
+                json.dump({"perfume": perfumes_data}, file, indent=4)
+
+            return {"message": f"Perfume notes for '{perfume_name}' updated successfully. New perfume notes: {updated_notes}"}
+
+    raise HTTPException(status_code=404, detail="Perfume not found")
+
+# New endpoint to add a new perfume entry and write it to the beginning of the JSON file
+@app.post("/add_new_perfume")
+async def add_new_perfume(name: str, brand: str, notes: str):
+    global perfumes_data
+
+    new_perfume = {
+        "Name": name,
+        "Brand": brand,
+        "Notes": notes
+    }
+
+    # Add the new perfume entry to the beginning of the perfume list
+    perfumes_data.insert(0, new_perfume)
+
+    # Write the updated perfume data to the JSON file
+    with open('perfume.json', 'w') as file:
+        json.dump({"perfume": perfumes_data}, file, indent=4)
+
+    return {"message": f"New perfume '{name}' added successfully"}

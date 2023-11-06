@@ -1,9 +1,14 @@
 {
     "perfume": [
         {
+            "Name": "Twilight Mauve",
+            "Brand": "Zara",
+            "Notes": "apple, watermelon, violet, passionfruit, peony, freesia, iris, honeysuckle, musk, cedar, ambergris"
+        },
+        {
             "Name": "Kagiroi Parfum",
             "Brand": "Di Ser",
-            "Notes": " Green yuzu, green shikuwasa, sansho seed, coriander, ylang-ylang, shiso, rosewood, vetiver, hinoki, cypriol, patchouli, agarwood"
+            "Notes": " Green yuzu, green shikuwasa, sansho seed, coriander, ylang-ylang, shiso, rosewood, vetiver, hinoki, cypriol, patchouli, agarwood, oak, jasmine"
         },
         {
             "Name": "Velvet Fantasy Eau de Parfum",
