@@ -20,12 +20,13 @@ class TokenData(BaseModel):
 
 class User(BaseModel):
     username: str
-    email: str or None = None
-    full_name: str or None = None
-    disabled: bool or None = None
 
 class UserInDB(User):
     hashed_password: str
+
+class PerfumePreferences(BaseModel):
+    preferences: List[str]
+    dislikes: List[str]
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth_2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -96,6 +97,30 @@ with open('perfume.json', 'r') as file:
 with open('user.json', 'r') as file:
     users_data = json.load(file)['user']
 
+@app.post("/register", response_model=User)
+async def register_user(username: str, password: str):
+    global users_data
+
+    # Check if the username is already taken
+    if any(user["username"] == username for user in users_data):
+        raise HTTPException(status_code=400, detail="Username is already taken")
+
+    hashed_password = get_password_hash(password)
+    new_user = {
+        "id": len(users_data) + 1,
+        "username": username,
+        "hashed_password": hashed_password,
+    }
+
+    # Add the new user to the user list
+    users_data.append(new_user)
+
+    # Write the updated user data to the JSON file
+    with open('user.json', 'w') as file:
+        json.dump({"user": users_data}, file, indent=4)
+
+    return new_user
+
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(users_data, form_data.username, form_data.password)
@@ -109,14 +134,20 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 # Endpoint to get perfume recommendations based on notes
 @app.post("/get_perfume_recommendation", dependencies=[Depends(get_current_user)])
-async def get_recommendation(preferences: List[str]):
+async def get_recommendation(preferences: PerfumePreferences):
     if not preferences:
         return {"error": "No preferences provided"}
 
     matching_perfumes = []
     for perfume in perfumes_data:
         characteristics = perfume["Notes"].lower()
-        if all(preference.lower() in characteristics for preference in preferences):
+        # Check if all preferred notes are in characteristics
+        has_preferred_notes = all(preference.lower() in characteristics for preference in preferences.preferences)
+
+        # Check if no disliked notes are in characteristics
+        has_no_disliked_notes = not any(dislike.lower() in characteristics for dislike in preferences.dislikes)
+
+        if has_preferred_notes and has_no_disliked_notes:
             matching_perfumes.append(perfume)
     
     if not matching_perfumes:

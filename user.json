@@ -1,12 +1,19 @@
-{"user": [
-    {
-        "id": 1, 
-        "username": "tarach", 
-        "hashed_password": "$2b$12$WXLCl6HzaaQhdjqskjYAueMOURY8UiVDMfSmWjpa0ERYZvpIk/p0m"
-    },
-    {
-        "id": 2,
-        "username": "tester",
-        "hashed_password": "$2b$12$N6BB1q6FIFfwCsqBUdFcsO71iHvsANVHoVdViyntATY7g813PXzKK"
-    }
-]}
+{
+    "user": [
+        {
+            "id": 1,
+            "username": "tarach",
+            "hashed_password": "$2b$12$WXLCl6HzaaQhdjqskjYAueMOURY8UiVDMfSmWjpa0ERYZvpIk/p0m"
+        },
+        {
+            "id": 2,
+            "username": "tester",
+            "hashed_password": "$2b$12$N6BB1q6FIFfwCsqBUdFcsO71iHvsANVHoVdViyntATY7g813PXzKK"
+        },
+        {
+            "id": 3,
+            "username": "testregister",
+            "hashed_password": "$2b$12$2AuU6XDGIeQaumNmEVPfl.kn.LvlHTG166B5LTcv3IgIZ3JHdBTbS"
+        }
+    ]
+}
