@@ -2,18 +2,14 @@
     "user": [
         {
             "id": 1,
-            "username": "tarach",
-            "hashed_password": "$2b$12$WXLCl6HzaaQhdjqskjYAueMOURY8UiVDMfSmWjpa0ERYZvpIk/p0m"
+            "username": "testregister",
+            "role": "admin",
+            "hashed_password": "$2b$12$2AuU6XDGIeQaumNmEVPfl.kn.LvlHTG166B5LTcv3IgIZ3JHdBTbS"
         },
         {
             "id": 2,
-            "username": "tester",
-            "hashed_password": "$2b$12$N6BB1q6FIFfwCsqBUdFcsO71iHvsANVHoVdViyntATY7g813PXzKK"
-        },
-        {
-            "id": 3,
-            "username": "testregister",
-            "hashed_password": "$2b$12$2AuU6XDGIeQaumNmEVPfl.kn.LvlHTG166B5LTcv3IgIZ3JHdBTbS"
+            "username": "tarach",
+            "hashed_password": "$2b$12$M7rfE6Us2882cqh.2/hfc.5.3RyCGiuR0LldftsAuUpYggxTneROW"
         }
     ]
 }

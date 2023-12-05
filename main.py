@@ -20,6 +20,7 @@ class TokenData(BaseModel):
 
 class User(BaseModel):
     username: str
+    role: str = "user"
 
 class UserInDB(User):
     hashed_password: str
@@ -134,7 +135,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 # Endpoint to get perfume recommendations based on notes
 @app.post("/get_perfume_recommendation", dependencies=[Depends(get_current_user)])
-async def get_recommendation(preferences: PerfumePreferences):
+async def get_recommendation(preferences: PerfumePreferences, current_user: UserInDB = Depends(get_current_user)):
     if not preferences:
         return {"error": "No preferences provided"}
 
@@ -165,7 +166,10 @@ async def get_perfume_notes(perfume_name: str):
 
 # Endpoint to delete perfume based on perfume names
 @app.delete("/delete_perfume/{perfume_name}", dependencies=[Depends(get_current_user)])
-async def delete_perfume(perfume_name: str):
+async def delete_perfume(perfume_name: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied. Admin role required.")
+    
     global perfumes_data
 
     index_to_remove = None
@@ -189,7 +193,10 @@ async def delete_perfume(perfume_name: str):
 
 # New endpoint to update perfume notes for a specific perfume name
 @app.put("/update_perfume_notes/{perfume_name}", dependencies=[Depends(get_current_user)])
-async def update_perfume_notes(perfume_name: str, updated_note: str):
+async def update_perfume_notes(perfume_name: str, updated_note: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied. Admin role required.")
+    
     global perfumes_data
 
     updated_note = updated_note.strip()  # Remove leading/trailing whitespaces
@@ -211,7 +218,10 @@ async def update_perfume_notes(perfume_name: str, updated_note: str):
 
 # New endpoint to add a new perfume entry and write it to the beginning of the JSON file
 @app.post("/add_new_perfume", dependencies=[Depends(get_current_user)])
-async def add_new_perfume(name: str, brand: str, notes: str):
+async def add_new_perfume(name: str, brand: str, notes: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied. Admin role required.")
+    
     global perfumes_data
 
     new_perfume = {
