@@ -5,6 +5,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing import List
+import requests
+from fastapi.middleware.cors import CORSMiddleware
 import json
 
 SECRET_KEY = "95f9451e0d7c855350eebfc37b15a05fb50580cc52d13f251ecfe5fe00200566"
@@ -24,6 +26,7 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
+    notes_token: str = ""
 
 class PerfumePreferences(BaseModel):
     preferences: List[str]
@@ -33,6 +36,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth_2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Update with the actual origin of your React app
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -100,7 +111,10 @@ with open('user.json', 'r') as file:
 
 @app.post("/register", response_model=User)
 async def register_user(username: str, password: str):
+    # Reload user data from the JSON file
     global users_data
+    with open('user.json', 'r') as file:
+        users_data = json.load(file)['user']
 
     # Check if the username is already taken
     if any(user["username"] == username for user in users_data):
@@ -110,7 +124,9 @@ async def register_user(username: str, password: str):
     new_user = {
         "id": len(users_data) + 1,
         "username": username,
+        "role": "user",
         "hashed_password": hashed_password,
+        "notes_token": ""
     }
 
     # Add the new user to the user list
@@ -120,7 +136,21 @@ async def register_user(username: str, password: str):
     with open('user.json', 'w') as file:
         json.dump({"user": users_data}, file, indent=4)
 
+    notes_url = "https://customizefragrance.azurewebsites.net"
+    notes_url_register = f"{notes_url}/register"
+    notes_register_data = {
+        "username": username,
+        "password": password
+    }
+    try:
+        response = requests.post(notes_url_register, json=notes_register_data)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(response.text)
+        raise HTTPException(status_code=500, detail=f"Failed to register user in CusGan's service: {str(e)}")
+
     return new_user
+
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -131,7 +161,28 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
                             headers={"WWW-Authenticate": "Bearer"})
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
-    return {"access_token": access_token, "token_type": "bearer"}
+    notes_url = "https://customizefragrance.azurewebsites.net"
+    notes_url_token = f"{notes_url}/token"
+    notes_token_data = {
+        "username": form_data.username,
+        "password": form_data.password
+    }
+
+    try:
+        response = requests.post(notes_url_token, data=notes_token_data, headers={"Content-Type": "application/x-www-form-urlencoded"})
+        response.raise_for_status()
+        notes_response_data = response.json()
+        notes_token = notes_response_data.get("access_token")
+        for user in users_data:
+            if user['username'] == form_data.username :
+                user['notes_token'] = notes_token
+                with open('user.json', 'w') as file:
+                    json.dump({"user": users_data}, file, indent=4)
+    except requests.RequestException as e:
+        print(response.text)
+        raise HTTPException(status_code=500, detail=f"Failed to generate token in CusGan's service: {str(e)}")
+
+    return {"access_token": access_token, "token_type": "bearer", "notes_token": notes_token}
 
 # Endpoint to get perfume recommendations based on notes
 @app.post("/get_perfume_recommendation", dependencies=[Depends(get_current_user)])
@@ -159,10 +210,16 @@ async def get_recommendation(preferences: PerfumePreferences, current_user: User
 # Endpoint to get perfume notes based on perfume names
 @app.get("/get_perfume_notes/{perfume_name}", dependencies=[Depends(get_current_user)])
 async def get_perfume_notes(perfume_name: str):
-    perfume_notes = [perfume["Notes"] for perfume in perfumes_data if perfume["Name"].lower() == perfume_name.lower()]
-    if not perfume_notes:
+    matching_perfumes = [
+        {"Name": perfume["Name"], "Notes": perfume["Notes"]}
+        for perfume in perfumes_data if perfume_name.lower() in perfume["Name"].lower()
+    ]
+    
+    if not matching_perfumes:
         raise HTTPException(status_code=404, detail="Perfume not found")
-    return {"perfume_name": perfume_name, "perfume_notes": perfume_notes}
+    
+    return {"matching_perfumes": matching_perfumes}
+
 
 # Endpoint to delete perfume based on perfume names
 @app.delete("/delete_perfume/{perfume_name}", dependencies=[Depends(get_current_user)])
@@ -239,5 +296,34 @@ async def add_new_perfume(name: str, brand: str, notes: str, current_user: User 
 
     return {"message": f"New perfume '{name}' added successfully"}
 
-# pwd = get_password_hash("test123")
-# print(pwd)
+@app.get('/notes', dependencies=[Depends(get_current_user)])
+async def read_data(current_user: User = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    token = current_user.notes_token
+    if token:
+        friend_service_url = "https://customizefragrance.azurewebsites.net"
+        destination_url = f"{friend_service_url}/notes"
+        headers = {
+            'accept': 'application/json',
+            "Authorization": f"Bearer {token}"
+        }
+
+        try:
+            # Kirim permintaan GET ke layanan teman
+            response = requests.get(destination_url, headers=headers)
+            response.raise_for_status()
+            destination_data = response.json()
+            return {
+                "code": 200,
+                "messages" : "Get All Notes successfully",
+                "data" : destination_data
+                }
+        except requests.RequestException as e:
+            raise HTTPException(status_code=500, detail=f"Failed to get destination data from notes's service: {str(e)}")
+    else:
+        return {
+                "code": 404,
+                "messages" : "Failed get All Notes"
+                }

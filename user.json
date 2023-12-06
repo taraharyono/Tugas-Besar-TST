@@ -8,8 +8,10 @@
         },
         {
             "id": 2,
-            "username": "tarach",
-            "hashed_password": "$2b$12$M7rfE6Us2882cqh.2/hfc.5.3RyCGiuR0LldftsAuUpYggxTneROW"
+            "username": "b",
+            "role": "user",
+            "hashed_password": "$2b$12$QvjigrVNvJAKEsdAE9oNheDVT.smZVlQakZfXNdWphR4muJbEHmNu",
+            "notes_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiIiwiZXhwIjoxNzAxODgwODY0fQ.64zQDlkAOMDBbzTkp4wav1pCtCtABFIhS2AEOZNv_PI"
         }
     ]
 }
