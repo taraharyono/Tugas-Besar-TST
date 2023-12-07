@@ -193,7 +193,7 @@ async def get_recommendation(preferences: PerfumePreferences, current_user: User
 
     matching_perfumes = []
     for perfume in perfumes_data:
-        characteristics = perfume["Notes"].lower()
+        characteristics = perfume["Notes"].lower().split(', ')
         # Check if all preferred notes are in characteristics
         has_preferred_notes = all(preference.lower() in characteristics for preference in preferences.preferences)
 
