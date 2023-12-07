@@ -15,6 +15,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 class Token(BaseModel):
     access_token: str
+    notes_token: str
     token_type: str
 
 class TokenData(BaseModel):
@@ -162,14 +163,14 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     notes_url = "https://customizefragrance.azurewebsites.net"
-    notes_url_token = f"{notes_url}/token"
+    notes_token_url = f"{notes_url}/token"
     notes_token_data = {
         "username": form_data.username,
         "password": form_data.password
     }
 
     try:
-        response = requests.post(notes_url_token, data=notes_token_data, headers={"Content-Type": "application/x-www-form-urlencoded"})
+        response = requests.post(notes_token_url, data=notes_token_data, headers={"Content-Type": "application/x-www-form-urlencoded"})
         response.raise_for_status()
         notes_response_data = response.json()
         notes_token = notes_response_data.get("access_token")
@@ -182,7 +183,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         print(response.text)
         raise HTTPException(status_code=500, detail=f"Failed to generate token in CusGan's service: {str(e)}")
 
-    return {"access_token": access_token, "token_type": "bearer", "notes_token": notes_token}
+    return {"access_token": access_token, "notes_token": notes_token, "token_type": "bearer"}
 
 # Endpoint to get perfume recommendations based on notes
 @app.post("/get_perfume_recommendation", dependencies=[Depends(get_current_user)])

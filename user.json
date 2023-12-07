@@ -1,15 +1,9 @@
 {
     "user": [
         {
-            "id": 1,
-            "username": "testregister",
-            "role": "admin",
-            "hashed_password": "$2b$12$2AuU6XDGIeQaumNmEVPfl.kn.LvlHTG166B5LTcv3IgIZ3JHdBTbS"
-        },
-        {
             "id": 2,
             "username": "b",
-            "role": "user",
+            "role": "admin",
             "hashed_password": "$2b$12$QvjigrVNvJAKEsdAE9oNheDVT.smZVlQakZfXNdWphR4muJbEHmNu",
             "notes_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiIiwiZXhwIjoxNzAxOTE0NzgzfQ.8tjrAEHwbUXq0R1Gk9ogkOeTwrkfQlXwcHnUffFST6c"
         }
