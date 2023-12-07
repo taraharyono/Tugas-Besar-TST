@@ -297,14 +297,14 @@ async def add_new_perfume(name: str, brand: str, notes: str, current_user: User 
     return {"message": f"New perfume '{name}' added successfully"}
 
 @app.get('/notes', dependencies=[Depends(get_current_user)])
-async def read_data(current_user: User = Depends(get_current_user)):
+async def read_data(personality: str, current_user: User = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     
     token = current_user.notes_token
     if token:
         friend_service_url = "https://customizefragrance.azurewebsites.net"
-        destination_url = f"{friend_service_url}/notes"
+        notes_url = f"{friend_service_url}/notes"
         headers = {
             'accept': 'application/json',
             "Authorization": f"Bearer {token}"
@@ -312,14 +312,29 @@ async def read_data(current_user: User = Depends(get_current_user)):
 
         try:
             # Kirim permintaan GET ke layanan teman
-            response = requests.get(destination_url, headers=headers)
+            response = requests.get(notes_url, headers=headers)
             response.raise_for_status()
-            destination_data = response.json()
+            notes_data = response.json()
+            kombinasi_fragrance = None
+
+            for note in notes_data:
+                if note["Deskripsi_Kepribadian"].lower() == personality.lower():
+                    kombinasi_fragrance = note["Kombinasi_Fragrance"]
+                    break
+
+            if kombinasi_fragrance is None:
+                raise HTTPException(status_code=404, detail="Personality not found in notes")
+
+            # Call get_perfume_recommendation with the matched kombinasi_fragrance
+            preferences = PerfumePreferences(preferences=[kombinasi_fragrance], dislikes=[])
+            recommendations = await get_recommendation(preferences, current_user)
+
             return {
                 "code": 200,
-                "messages" : "Get All Notes successfully",
-                "data" : destination_data
-                }
+                "messages": "Get All Notes successfully",
+                "matching notes": kombinasi_fragrance,
+                "data": recommendations
+            }
         except requests.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Failed to get destination data from notes's service: {str(e)}")
     else:
